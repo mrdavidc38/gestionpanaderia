@@ -1,0 +1,29 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Cormorant Garamond", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-wood-dark: #3e2723;
+  --color-wood-medium: #5d4037;
+  --color-wood-light: #8d6e63;
+  --color-vintage-cream: #fdfaf6;
+  --color-vintage-paper: #f5f2ed;
+  --color-vintage-accent: #c62828;
+}
+
+body {
+  background-color: var(--color-vintage-cream);
+  color: #2d2d2d;
+}
+
+.vintage-serif {
+  font-family: var(--font-serif);
+}
+
+.wood-gradient {
+  background: linear-gradient(to bottom, #5d4037, #3e2723);
+}
