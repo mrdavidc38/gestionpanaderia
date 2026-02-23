@@ -2,6 +2,7 @@ import { EntityMetadataMap, DefaultDataServiceConfig } from '@ngrx/data';
 
 export const entityMetadata: EntityMetadataMap = {
   Product: {},
+  Category: {},
   Order: {},
   User: {},
   Invoice: {}

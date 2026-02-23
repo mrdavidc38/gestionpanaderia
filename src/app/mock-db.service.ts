@@ -3,12 +3,18 @@ import { UserRole, OrderStatus } from './domain/models';
 
 export class MockDbService implements InMemoryDbService {
   createDb() {
+    const categories = [
+      { id: 'cat1', name: 'Pan grande', description: 'Panes de gran formato y hogazas tradicionales.', image: 'https://picsum.photos/seed/bread1/400/300' },
+      { id: 'cat2', name: 'Dulcería', description: 'Bollería dulce, pasteles y caprichos azucarados.', image: 'https://picsum.photos/seed/sweet1/400/300' },
+      { id: 'cat3', name: 'Pan pequeño', description: 'Panecillos, pulgas y piezas individuales.', image: 'https://picsum.photos/seed/bread2/400/300' },
+    ];
+
     const products = [
-      { id: '1', name: 'Pan de Molde', price: 3.5, stock: 45, category: 'Panes', description: 'Pan tierno y esponjoso, ideal para tostadas y sándwiches.' },
-      { id: '2', name: 'Croissant Especial', price: 1.8, stock: 12, category: 'Bollería', description: 'Hojaldre crujiente con mantequilla pura de alta calidad.' },
-      { id: '3', name: 'Baguette Rústica', price: 2.2, stock: 30, category: 'Panes', description: 'Corteza crujiente y miga alveolada con masa madre.' },
-      { id: '4', name: 'Tarta de Manzana', price: 15.0, stock: 5, category: 'Pastelería', description: 'Base de hojaldre con crema pastelera y manzanas frescas.' },
-      { id: '5', name: 'Muffin de Chocolate', price: 2.5, stock: 25, category: 'Bollería', description: 'Muffin intenso con pepitas de chocolate belga.' },
+      { id: '1', name: 'Hogaza de Pueblo', price: 3.5, stock: 45, categoryId: 'cat1', description: 'Pan rústico de masa madre cocido en horno de piedra.' },
+      { id: '2', name: 'Croissant de Mantequilla', price: 1.8, stock: 12, categoryId: 'cat2', description: 'Hojaldre crujiente con mantequilla pura.' },
+      { id: '3', name: 'Baguette Tradición', price: 1.2, stock: 30, categoryId: 'cat1', description: 'Corteza crujiente y miga alveolada.' },
+      { id: '4', name: 'Tarta de Santiago', price: 15.0, stock: 5, categoryId: 'cat2', description: 'Tarta tradicional de almendra.' },
+      { id: '5', name: 'Panecillo de Sésamo', price: 0.6, stock: 100, categoryId: 'cat3', description: 'Pequeño pan tierno con semillas de sésamo.' },
     ];
 
     const users = [
@@ -48,6 +54,6 @@ export class MockDbService implements InMemoryDbService {
       { id: '2024-001', orderId: 'ORD-101', date: new Date().toISOString(), customerName: 'Consumidor Final', total: 45.50 },
     ];
 
-    return { products, users, orders, invoices };
+    return { products, users, orders, invoices, categories };
   }
 }

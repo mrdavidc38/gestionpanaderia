@@ -1,11 +1,18 @@
 import { Injectable, inject } from '@angular/core';
 import { EntityCollectionServiceBase, EntityCollectionServiceElementsFactory } from '@ngrx/data';
-import { Product, Order, User, Invoice } from '../domain/models';
+import { Product, Order, User, Invoice, Category } from '../domain/models';
 
 @Injectable({ providedIn: 'root' })
 export class ProductService extends EntityCollectionServiceBase<Product> {
   constructor() {
     super('Product', inject(EntityCollectionServiceElementsFactory));
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class CategoryService extends EntityCollectionServiceBase<Category> {
+  constructor() {
+    super('Category', inject(EntityCollectionServiceElementsFactory));
   }
 }
 

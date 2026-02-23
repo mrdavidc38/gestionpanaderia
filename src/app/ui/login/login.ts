@@ -35,12 +35,12 @@ import { UserRole } from '../../domain/models';
           <div class="inline-flex items-center justify-center w-20 h-20 bg-white/20 rounded-3xl mb-6 backdrop-blur-md shadow-lg ring-1 ring-white/30">
             <mat-icon class="!w-12 !h-12 text-4xl">bakery_dining</mat-icon>
           </div>
-          <h1 class="text-3xl font-bold tracking-tight vintage-serif">Panadería Los Sanchez</h1>
+          <h1 class="text-3xl font-bold tracking-tight vintage-serif">Panadería Sánchez</h1>
           <p class="text-wood-light/80 mt-3 font-medium italic vintage-serif text-lg">Tradición en cada bocado</p>
         </div>
 
-        <mat-card-content class="p-10 mt-6">
-          <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-6">
+        <mat-card-content class="p-10 mt-10">
+          <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-8">
             <mat-form-field appearance="outline" class="w-full">
               <mat-label class="vintage-serif">Correo Electrónico</mat-label>
               <input matInput type="email" formControlName="email" placeholder="ejemplo@panaderia.com">
@@ -94,7 +94,7 @@ export class Login {
   loading = signal(false);
 
   loginForm = this.fb.group({
-    email: ['admin@lossanchez.com', [Validators.required, Validators.email]],
+    email: ['admin@sanchez.com', [Validators.required, Validators.email]],
     role: [UserRole.ADMIN, Validators.required]
   });
 

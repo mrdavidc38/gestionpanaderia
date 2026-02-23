@@ -31,7 +31,7 @@ import { UserRole } from '../../domain/models';
             <div class="bg-wood-dark p-3 rounded-full text-white shadow-lg mb-4 ring-4 ring-wood-light/20">
               <mat-icon class="!w-8 !h-8 text-2xl">bakery_dining</mat-icon>
             </div>
-            <h1 class="text-2xl font-bold text-wood-dark tracking-tight vintage-serif">Los Sanchez</h1>
+            <h1 class="text-2xl font-bold text-wood-dark tracking-tight vintage-serif">Sánchez</h1>
             <div class="h-px w-16 bg-wood-light/30 mt-2"></div>
           </div>
 

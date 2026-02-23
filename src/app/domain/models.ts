@@ -16,7 +16,14 @@ export interface Product {
   name: string;
   price: number;
   stock: number;
-  category: string;
+  categoryId: string;
+  description?: string;
+  image?: string;
+}
+
+export interface Category {
+  id: string;
+  name: string;
   description?: string;
   image?: string;
 }
@@ -39,6 +46,7 @@ export interface Order {
   userId: string;
   customerName: string;
   date: string;
+  deliveryDate?: string;
   total: number;
   status: OrderStatus;
   items: OrderItem[];

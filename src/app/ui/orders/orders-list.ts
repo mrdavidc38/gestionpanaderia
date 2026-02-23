@@ -1,13 +1,220 @@
-import { Component, ChangeDetectionStrategy, inject, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatDialogModule, MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { OrderStatus, Order } from '../../domain/models';
-import { OrderService } from '../../application/entity-services';
+import { MatDialogModule, MatDialog, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { ReactiveFormsModule, FormBuilder, Validators, FormArray } from '@angular/forms';
+import { OrderStatus, Order, Product, OrderItem } from '../../domain/models';
+import { OrderService, ProductService } from '../../application/entity-services';
+
+@Component({
+  selector: 'app-order-form-dialog',
+  standalone: true,
+  imports: [
+    CommonModule, 
+    MatDialogModule, 
+    MatButtonModule, 
+    MatIconModule, 
+    MatFormFieldModule, 
+    MatInputModule, 
+    MatSelectModule, 
+    MatDatepickerModule,
+    ReactiveFormsModule
+  ],
+  template: `
+    <div class="p-8 bg-vintage-cream min-w-[600px]">
+      <h2 class="text-3xl font-bold text-wood-dark vintage-serif mb-6">
+        {{ data ? 'Editar Pedido' : 'Nuevo Pedido' }}
+      </h2>
+
+      <form [formGroup]="orderForm" (ngSubmit)="onSubmit()" class="space-y-6">
+        <div class="grid grid-cols-2 gap-6">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label class="vintage-serif">Nombre del Comprador</mat-label>
+            <input matInput formControlName="customerName" placeholder="Ej: Juan Pérez">
+            <mat-icon matPrefix class="mr-2 text-wood-light">person</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label class="vintage-serif">Estado</mat-label>
+            <mat-select formControlName="status">
+              <mat-option [value]="OrderStatus.PENDING">Pendiente</mat-option>
+              <mat-option [value]="OrderStatus.COMPLETED">Completado</mat-option>
+              <mat-option [value]="OrderStatus.CANCELLED">Cancelado</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="grid grid-cols-2 gap-6">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label class="vintage-serif">Fecha de Inicio</mat-label>
+            <input matInput [matDatepicker]="picker1" formControlName="date">
+            <mat-datepicker-toggle matIconSuffix [for]="picker1"></mat-datepicker-toggle>
+            <mat-datepicker #picker1></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label class="vintage-serif">Fecha de Entrega (Salida)</mat-label>
+            <input matInput [matDatepicker]="picker2" formControlName="deliveryDate">
+            <mat-datepicker-toggle matIconSuffix [for]="picker2"></mat-datepicker-toggle>
+            <mat-datepicker #picker2></mat-datepicker>
+          </mat-form-field>
+        </div>
+
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xl font-bold text-wood-dark vintage-serif">Productos</h3>
+            <button type="button" mat-stroked-button color="primary" class="!rounded-xl" (click)="addItem()">
+              <mat-icon>add</mat-icon> Agregar Producto
+            </button>
+          </div>
+
+          <div formArrayName="items" class="space-y-3 max-h-60 overflow-y-auto pr-2">
+            @for (item of items.controls; track $index) {
+              <div [formGroupName]="$index" class="flex gap-4 items-center bg-white/50 p-3 rounded-2xl border border-wood-light/10">
+                <mat-form-field appearance="outline" class="flex-[2]">
+                  <mat-label>Producto</mat-label>
+                  <mat-select formControlName="productId" (selectionChange)="onProductChange($index, $event.value)">
+                    @for (p of products(); track p.id) {
+                      <mat-option [value]="p.id">{{ p.name }} ({{ p.price | currency }})</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="flex-1">
+                  <mat-label>Cant.</mat-label>
+                  <input matInput type="number" formControlName="quantity" min="1">
+                </mat-form-field>
+
+                <div class="flex-1 text-right font-bold text-wood-dark">
+                  {{ (item.get('price')?.value * item.get('quantity')?.value) | currency }}
+                </div>
+
+                <button type="button" mat-icon-button color="warn" (click)="removeItem($index)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="flex justify-between items-center pt-6 border-t border-wood-light/20">
+          <div class="text-2xl font-bold text-wood-dark vintage-serif">
+            Total: {{ calculateTotal() | currency }}
+          </div>
+          <div class="flex gap-4">
+            <button type="button" mat-button mat-dialog-close class="!rounded-xl h-12 px-6">Cancelar</button>
+            <button type="submit" mat-flat-button class="!rounded-xl h-12 px-10 wood-gradient !text-white font-bold shadow-lg" [disabled]="orderForm.invalid">
+              {{ data ? 'Guardar Cambios' : 'Crear Pedido' }}
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  `,
+  styles: [`
+    :host { display: block; }
+    ::ng-deep .mat-mdc-form-field-subscript-wrapper { display: none; }
+  `]
+})
+export class OrderFormDialog implements OnInit {
+  private fb = inject(FormBuilder);
+  private dialogRef = inject(MatDialogRef<OrderFormDialog>);
+  data = inject<Order | null>(MAT_DIALOG_DATA);
+  productService = inject(ProductService);
+  
+  OrderStatus = OrderStatus;
+  products = signal<Product[]>([]);
+
+  orderForm = this.fb.group({
+    customerName: ['', Validators.required],
+    status: [OrderStatus.PENDING, Validators.required],
+    date: [new Date(), Validators.required],
+    deliveryDate: [new Date(), Validators.required],
+    items: this.fb.array([])
+  });
+
+  get items() { return this.orderForm.get('items') as FormArray; }
+
+  ngOnInit() {
+    this.productService.getAll().subscribe(prods => this.products.set(prods));
+    
+    if (this.data) {
+      this.orderForm.patchValue({
+        customerName: this.data.customerName,
+        status: this.data.status,
+        date: new Date(this.data.date),
+        deliveryDate: this.data.deliveryDate ? new Date(this.data.deliveryDate) : new Date()
+      });
+      this.data.items.forEach(item => {
+        this.items.push(this.fb.group({
+          productId: [item.productId, Validators.required],
+          productName: [item.productName],
+          quantity: [item.quantity, [Validators.required, Validators.min(1)]],
+          price: [item.price]
+        }));
+      });
+    } else {
+      this.addItem();
+    }
+  }
+
+  addItem() {
+    this.items.push(this.fb.group({
+      productId: ['', Validators.required],
+      productName: [''],
+      quantity: [1, [Validators.required, Validators.min(1)]],
+      price: [0]
+    }));
+  }
+
+  removeItem(index: number) {
+    this.items.removeAt(index);
+  }
+
+  onProductChange(index: number, productId: string) {
+    const product = this.products().find(p => p.id === productId);
+    if (product) {
+      const group = this.items.at(index);
+      group.patchValue({
+        productName: product.name,
+        price: product.price
+      });
+    }
+  }
+
+  calculateTotal() {
+    return this.items.controls.reduce((acc, control) => {
+      const price = control.get('price')?.value || 0;
+      const qty = control.get('quantity')?.value || 0;
+      return acc + (price * qty);
+    }, 0);
+  }
+
+  onSubmit() {
+    if (this.orderForm.valid) {
+      const formValue = this.orderForm.value;
+      const orderData: Partial<Order> = {
+        ...this.data,
+        customerName: formValue.customerName!,
+        status: formValue.status!,
+        date: (formValue.date as Date).toISOString(),
+        deliveryDate: (formValue.deliveryDate as Date).toISOString(),
+        items: formValue.items as OrderItem[],
+        total: this.calculateTotal(),
+        userId: '1' // Mock user
+      };
+      this.dialogRef.close(orderData);
+    }
+  }
+}
 
 @Component({
   selector: 'app-order-detail-dialog',
@@ -21,11 +228,11 @@ import { OrderService } from '../../application/entity-services';
             <mat-icon>bakery_dining</mat-icon>
           </div>
           <div>
-            <h2 class="text-2xl font-bold text-wood-dark vintage-serif">Panadería Los Sanchez</h2>
+            <h2 class="text-2xl font-bold text-wood-dark vintage-serif">Panadería Sánchez</h2>
             <p class="text-xs text-wood-light font-black uppercase tracking-widest">Ticket de Pedido #{{ data.id }}</p>
           </div>
         </div>
-        <button mat-icon-button mat-dialog-close class="text-wood-light">
+        <button mat-icon-button mat-dialog-close class="text-wood-light" title="Cerrar">
           <mat-icon>close</mat-icon>
         </button>
       </div>
@@ -37,8 +244,8 @@ import { OrderService } from '../../application/entity-services';
             <p class="text-lg font-bold text-wood-dark vintage-serif">{{ data.customerName }}</p>
           </div>
           <div class="text-right">
-            <p class="text-[10px] font-black text-wood-light uppercase tracking-widest">Fecha</p>
-            <p class="text-sm font-bold text-wood-dark">{{ data.date | date:'medium' }}</p>
+            <p class="text-[10px] font-black text-wood-light uppercase tracking-widest">Entrega</p>
+            <p class="text-sm font-bold text-wood-dark">{{ data.deliveryDate | date:'medium' }}</p>
           </div>
         </div>
 
@@ -109,7 +316,7 @@ export class OrderDetailDialog {
           <h2 class="text-4xl font-bold text-wood-dark tracking-tight vintage-serif">Libro de Pedidos</h2>
           <p class="text-wood-light font-medium mt-2 italic vintage-serif text-lg">Seguimiento de encargos y ventas directas.</p>
         </div>
-        <button mat-flat-button class="!rounded-2xl h-14 px-8 wood-gradient !text-white shadow-lg hover:shadow-xl transition-all active:scale-95">
+        <button mat-flat-button class="!rounded-2xl h-14 px-8 wood-gradient !text-white shadow-lg hover:shadow-xl transition-all active:scale-95" (click)="openOrderForm()">
           <mat-icon class="mr-2">shopping_basket</mat-icon>
           <span class="font-bold text-lg vintage-serif">Nuevo Encargo</span>
         </button>
@@ -138,9 +345,9 @@ export class OrderDetailDialog {
             </ng-container>
 
             <ng-container matColumnDef="date">
-              <th mat-header-cell *matHeaderCellDef class="!bg-vintage-paper !text-wood-dark font-black uppercase text-xs tracking-[0.2em] py-6 px-8">Fecha</th>
+              <th mat-header-cell *matHeaderCellDef class="!bg-vintage-paper !text-wood-dark font-black uppercase text-xs tracking-[0.2em] py-6 px-8">Entrega</th>
               <td mat-cell *matCellDef="let o" class="py-6 px-8 text-wood-light font-medium">
-                {{ o.date | date:'mediumDate' }}
+                {{ o.deliveryDate | date:'short' }}
               </td>
             </ng-container>
 
@@ -167,10 +374,16 @@ export class OrderDetailDialog {
             <ng-container matColumnDef="actions">
               <th mat-header-cell *matHeaderCellDef class="!bg-vintage-paper !text-wood-dark font-black uppercase text-xs tracking-[0.2em] py-6 px-8 text-right">Acciones</th>
               <td mat-cell *matCellDef="let o" class="py-6 px-8 text-right">
-                <button mat-icon-button class="text-wood-light hover:text-wood-dark transition-colors mr-2" (click)="viewDetail(o)">
+                <button mat-icon-button class="text-wood-light hover:text-wood-dark transition-colors mr-2" (click)="viewDetail(o)" title="Ver Detalle">
                   <mat-icon>visibility</mat-icon>
                 </button>
-                <button mat-icon-button class="text-wood-light hover:text-emerald-600 transition-colors">
+                <button mat-icon-button class="text-wood-light hover:text-wood-dark transition-colors mr-2" (click)="openOrderForm(o)" title="Editar">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button class="text-wood-light hover:text-rose-600 transition-colors mr-2" (click)="deleteOrder(o.id)" title="Eliminar">
+                  <mat-icon>delete</mat-icon>
+                </button>
+                <button mat-icon-button class="text-wood-light hover:text-emerald-600 transition-colors" (click)="printOrder(o)" title="Imprimir">
                   <mat-icon>print</mat-icon>
                 </button>
               </td>
@@ -200,5 +413,35 @@ export class OrdersList implements OnInit {
       data: order,
       maxWidth: '600px'
     });
+  }
+
+  openOrderForm(order?: Order) {
+    const dialogRef = this.dialog.open(OrderFormDialog, {
+      data: order || null,
+      width: '700px'
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        if (order) {
+          this.orderService.update(result);
+        } else {
+          this.orderService.add({
+            ...result,
+            id: 'ORD-' + Math.floor(Math.random() * 1000)
+          });
+        }
+      }
+    });
+  }
+
+  deleteOrder(id: string) {
+    if (confirm('¿Deseas eliminar este pedido?')) {
+      this.orderService.delete(id);
+    }
+  }
+
+  printOrder(order: Order) {
+    this.viewDetail(order);
   }
 }

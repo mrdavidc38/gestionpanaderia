@@ -33,7 +33,7 @@ import { firstValueFrom } from 'rxjs';
             <span class="font-bold vintage-serif">Exportar Reporte</span>
           </button>
           <button mat-flat-button class="!rounded-2xl h-14 px-8 wood-gradient !text-white shadow-lg hover:shadow-xl transition-all active:scale-95">
-            <mat-icon class="mr-2">add_receipt</mat-icon>
+            <mat-icon class="mr-2">receipt</mat-icon>
             <span class="font-bold text-lg vintage-serif">Nueva Factura</span>
           </button>
         </div>
@@ -112,7 +112,7 @@ export class BillingList implements OnInit {
     // Header
     doc.setFontSize(22);
     doc.setTextColor(44, 24, 16); // Wood dark
-    doc.text('Panadería Los Sanchez', 105, 20, { align: 'center' });
+    doc.text('Panadería Sánchez', 105, 20, { align: 'center' });
     
     doc.setFontSize(10);
     doc.setTextColor(100);
@@ -165,6 +165,6 @@ export class BillingList implements OnInit {
     doc.setFont('helvetica', 'italic');
     doc.text('Gracias por su preferencia. "El secreto está en la masa y en el corazón"', 105, 280, { align: 'center' });
     
-    doc.save(`Factura_LosSanchez_${invoice.id}.pdf`);
+    doc.save(`Factura_Sanchez_${invoice.id}.pdf`);
   }
 }
