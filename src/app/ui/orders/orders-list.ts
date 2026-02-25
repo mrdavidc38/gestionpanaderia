@@ -13,6 +13,8 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { ReactiveFormsModule, FormBuilder, Validators, FormArray } from '@angular/forms';
 import { OrderStatus, Order, Product, OrderItem } from '../../domain/models';
 import { OrderService, ProductService } from '../../application/entity-services';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 @Component({
   selector: 'app-order-form-dialog',
@@ -111,7 +113,7 @@ import { OrderService, ProductService } from '../../application/entity-services'
           </div>
           <div class="flex gap-4">
             <button type="button" mat-button mat-dialog-close class="!rounded-xl h-12 px-6">Cancelar</button>
-            <button type="submit" mat-flat-button class="!rounded-xl h-12 px-10 wood-gradient !text-white font-bold shadow-lg" [disabled]="orderForm.invalid">
+            <button type="submit" mat-flat-button class="!rounded-xl h-12 px-10 wood-gradient !text-black font-bold shadow-lg" [disabled]="orderForm.invalid">
               {{ data ? 'Guardar Cambios' : 'Crear Pedido' }}
             </button>
           </div>
@@ -244,7 +246,24 @@ export class OrderFormDialog implements OnInit {
             <p class="text-lg font-bold text-wood-dark vintage-serif">{{ data.customerName }}</p>
           </div>
           <div class="text-right">
-            <p class="text-[10px] font-black text-wood-light uppercase tracking-widest">Entrega</p>
+            <p class="text-[10px] font-black text-wood-light uppercase tracking-widest">Estado</p>
+            <span [ngClass]="{
+              'text-amber-600': data.status === OrderStatus.PENDING,
+              'text-emerald-600': data.status === OrderStatus.COMPLETED,
+              'text-rose-600': data.status === OrderStatus.CANCELLED
+            }" class="text-sm font-bold uppercase tracking-widest">
+              {{ data.status }}
+            </span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 bg-white/50 p-4 rounded-2xl border border-wood-light/10">
+          <div>
+            <p class="text-[10px] font-black text-wood-light uppercase tracking-widest">Fecha Inicio</p>
+            <p class="text-sm font-bold text-wood-dark">{{ data.date | date:'medium' }}</p>
+          </div>
+          <div class="text-right">
+            <p class="text-[10px] font-black text-wood-light uppercase tracking-widest">Fecha Entrega</p>
             <p class="text-sm font-bold text-wood-dark">{{ data.deliveryDate | date:'medium' }}</p>
           </div>
         </div>
@@ -278,7 +297,7 @@ export class OrderFormDialog implements OnInit {
       </div>
 
       <div class="mt-10 flex gap-4">
-        <button mat-flat-button class="flex-1 !rounded-xl h-12 wood-gradient !text-white font-bold" (click)="print()">
+        <button mat-flat-button class="flex-1 !rounded-xl h-12 wood-gradient !text-black font-bold" (click)="print()">
           <mat-icon class="mr-2">print</mat-icon> Imprimir Ticket
         </button>
         <button mat-stroked-button mat-dialog-close class="flex-1 !rounded-xl h-12 !border-wood-light/30 !text-wood-light font-bold">
@@ -294,6 +313,7 @@ export class OrderFormDialog implements OnInit {
 })
 export class OrderDetailDialog {
   data = inject<Order>(MAT_DIALOG_DATA);
+  OrderStatus = OrderStatus;
   print() { window.print(); }
 }
 
@@ -316,7 +336,7 @@ export class OrderDetailDialog {
           <h2 class="text-4xl font-bold text-wood-dark tracking-tight vintage-serif">Libro de Pedidos</h2>
           <p class="text-wood-light font-medium mt-2 italic vintage-serif text-lg">Seguimiento de encargos y ventas directas.</p>
         </div>
-        <button mat-flat-button class="!rounded-2xl h-14 px-8 wood-gradient !text-white shadow-lg hover:shadow-xl transition-all active:scale-95" (click)="openOrderForm()">
+        <button mat-flat-button class="!rounded-2xl h-14 px-8 wood-gradient !text-black shadow-lg hover:shadow-xl transition-all active:scale-95" (click)="openOrderForm()">
           <mat-icon class="mr-2">shopping_basket</mat-icon>
           <span class="font-bold text-lg vintage-serif">Nuevo Encargo</span>
         </button>
@@ -345,6 +365,13 @@ export class OrderDetailDialog {
             </ng-container>
 
             <ng-container matColumnDef="date">
+              <th mat-header-cell *matHeaderCellDef class="!bg-vintage-paper !text-wood-dark font-black uppercase text-xs tracking-[0.2em] py-6 px-8">Inicio</th>
+              <td mat-cell *matCellDef="let o" class="py-6 px-8 text-wood-light font-medium">
+                {{ o.date | date:'short' }}
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="deliveryDate">
               <th mat-header-cell *matHeaderCellDef class="!bg-vintage-paper !text-wood-dark font-black uppercase text-xs tracking-[0.2em] py-6 px-8">Entrega</th>
               <td mat-cell *matCellDef="let o" class="py-6 px-8 text-wood-light font-medium">
                 {{ o.deliveryDate | date:'short' }}
@@ -401,7 +428,7 @@ export class OrderDetailDialog {
 export class OrdersList implements OnInit {
   orderService = inject(OrderService);
   dialog = inject(MatDialog);
-  displayedColumns = ['id', 'customer', 'date', 'total', 'status', 'actions'];
+  displayedColumns = ['id', 'customer', 'date', 'deliveryDate', 'total', 'status', 'actions'];
   OrderStatus = OrderStatus;
 
   ngOnInit() {
@@ -442,6 +469,60 @@ export class OrdersList implements OnInit {
   }
 
   printOrder(order: Order) {
-    this.viewDetail(order);
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFontSize(22);
+    doc.setTextColor(62, 39, 35); // Wood dark
+    doc.text('Panadería Sánchez', 105, 20, { align: 'center' });
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text('Tradición en cada bocado', 105, 26, { align: 'center' });
+    
+    doc.setDrawColor(141, 110, 99); // Wood light
+    doc.line(20, 32, 190, 32);
+    
+    // Order Info
+    doc.setFontSize(14);
+    doc.setTextColor(62, 39, 35);
+    doc.text(`PEDIDO Nº: ${order.id}`, 20, 45);
+    
+    doc.setFontSize(10);
+    doc.text(`Fecha Inicio: ${new Date(order.date).toLocaleDateString()}`, 20, 52);
+    const deliveryDateStr = order.deliveryDate ? new Date(order.deliveryDate).toLocaleString() : 'No especificada';
+    doc.text(`Fecha Entrega: ${deliveryDateStr}`, 20, 59);
+    doc.text(`Cliente: ${order.customerName}`, 20, 66);
+    
+    if (order.items && order.items.length > 0) {
+      const tableData = order.items.map(item => [
+        item.productName,
+        item.quantity.toString(),
+        `$${item.price.toFixed(2)}`,
+        `$${(item.quantity * item.price).toFixed(2)}`
+      ]);
+      
+      autoTable(doc, {
+        startY: 75,
+        head: [['Producto', 'Cant.', 'Precio Unit.', 'Subtotal']],
+        body: tableData,
+        headStyles: { fillColor: [62, 39, 35], textColor: [255, 255, 255] },
+        alternateRowStyles: { fillColor: [245, 242, 237] },
+        margin: { left: 20, right: 20 }
+      });
+    }
+    
+    // Total
+    const finalY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable?.finalY || 85;
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`TOTAL: $${order.total.toFixed(2)}`, 190, finalY + 20, { align: 'right' });
+    
+    // Footer
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'italic');
+    doc.text('Gracias por su preferencia. "El secreto está en la masa y en el corazón"', 105, 280, { align: 'center' });
+    
+    doc.save(`Pedido_Sanchez_${order.id}.pdf`);
   }
 }

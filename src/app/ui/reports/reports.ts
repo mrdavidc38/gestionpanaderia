@@ -50,7 +50,7 @@ import { Order } from '../../domain/models';
             <mat-datepicker #picker2></mat-datepicker>
           </mat-form-field>
 
-          <button mat-flat-button class="h-14 !rounded-2xl px-10 wood-gradient !text-white font-bold shadow-lg mb-4">
+          <button mat-flat-button class="h-14 !rounded-2xl px-10 wood-gradient !text-black font-bold shadow-lg mb-4">
             <mat-icon class="mr-2">analytics</mat-icon>
             Generar Informe
           </button>
@@ -65,7 +65,7 @@ import { Order } from '../../domain/models';
             <p class="text-[10px] font-black text-rose-700 uppercase tracking-widest mb-2">Gastos Operativos</p>
             <p class="text-3xl font-bold text-rose-900 vintage-serif">{{ totalExpenses() | currency }}</p>
           </div>
-          <div class="p-6 rounded-3xl bg-wood-dark text-white shadow-xl">
+          <div class="p-6 rounded-3xl bg-wood-dark text-black shadow-xl">
             <p class="text-[10px] font-black text-wood-light uppercase tracking-widest mb-2">Balance Neto</p>
             <p class="text-3xl font-bold vintage-serif">{{ (totalIncome() - totalExpenses()) | currency }}</p>
           </div>

@@ -30,7 +30,7 @@ import { UserRole } from '../../domain/models';
       <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-wood-dark/5 rounded-full blur-3xl"></div>
 
       <mat-card class="w-full max-w-md !rounded-3xl shadow-2xl overflow-hidden border border-wood-light/10 bg-white/90 backdrop-blur-sm relative z-10">
-        <div class="wood-gradient p-12 text-white text-center relative">
+        <div class="wood-gradient p-12 text-black text-center relative">
           <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: url('https://www.transparenttextures.com/patterns/wood-pattern.png')"></div>
           <div class="inline-flex items-center justify-center w-20 h-20 bg-white/20 rounded-3xl mb-6 backdrop-blur-md shadow-lg ring-1 ring-white/30">
             <mat-icon class="!w-12 !h-12 text-4xl">bakery_dining</mat-icon>
@@ -57,7 +57,7 @@ import { UserRole } from '../../domain/models';
               <mat-icon matPrefix class="mr-3 text-wood-light">admin_panel_settings</mat-icon>
             </mat-form-field>
 
-            <button mat-flat-button class="h-14 !rounded-2xl text-lg font-bold mt-4 wood-gradient !text-white shadow-lg hover:shadow-xl transition-all active:scale-95"
+            <button mat-flat-button class="h-14 !rounded-2xl text-lg font-bold mt-4 wood-gradient !text-black shadow-lg hover:shadow-xl transition-all active:scale-95"
                     [disabled]="loginForm.invalid || loading()">
               @if (loading()) {
                 <span class="flex items-center gap-2">

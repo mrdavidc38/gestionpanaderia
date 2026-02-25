@@ -32,7 +32,7 @@ import { firstValueFrom } from 'rxjs';
             <mat-icon class="mr-2">file_download</mat-icon>
             <span class="font-bold vintage-serif">Exportar Reporte</span>
           </button>
-          <button mat-flat-button class="!rounded-2xl h-14 px-8 wood-gradient !text-white shadow-lg hover:shadow-xl transition-all active:scale-95">
+          <button mat-flat-button class="!rounded-2xl h-14 px-8 wood-gradient !text-black shadow-lg hover:shadow-xl transition-all active:scale-95">
             <mat-icon class="mr-2">receipt</mat-icon>
             <span class="font-bold text-lg vintage-serif">Nueva Factura</span>
           </button>

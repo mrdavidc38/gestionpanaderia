@@ -2,11 +2,112 @@ import { Component, ChangeDetectionStrategy, inject, OnInit, signal, computed } 
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatDialogModule } from '@angular/material/dialog';
+import { MatDialogModule, MatDialog, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCardModule } from '@angular/material/card';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ProductService, CategoryService } from '../../application/entity-services';
 import { Product, Category } from '../../domain/models';
+
+@Component({
+  selector: 'app-product-form-dialog',
+  standalone: true,
+  imports: [CommonModule, MatDialogModule, MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule, ReactiveFormsModule],
+  template: `
+    <div class="p-8 bg-vintage-cream min-w-[500px]">
+      <h2 class="text-3xl font-bold text-wood-dark vintage-serif mb-6">
+        {{ data.product ? 'Editar Producto' : 'Nuevo Producto' }}
+      </h2>
+
+      <form [formGroup]="productForm" (ngSubmit)="onSubmit()" class="space-y-6">
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label class="vintage-serif">Nombre del Producto</mat-label>
+          <input matInput formControlName="name" placeholder="Ej: Pan de Centeno">
+          <mat-icon matPrefix class="mr-2 text-wood-light">bakery_dining</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label class="vintage-serif">Descripción</mat-label>
+          <textarea matInput formControlName="description" rows="3" placeholder="Ingredientes, alérgenos..."></textarea>
+        </mat-form-field>
+
+        <div class="grid grid-cols-2 gap-6">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label class="vintage-serif">Precio (€)</mat-label>
+            <input matInput type="number" formControlName="price" step="0.01">
+            <mat-icon matPrefix class="mr-2 text-wood-light">payments</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label class="vintage-serif">Stock Inicial</mat-label>
+            <input matInput type="number" formControlName="stock">
+            <mat-icon matPrefix class="mr-2 text-wood-light">inventory_2</mat-icon>
+          </mat-form-field>
+        </div>
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label class="vintage-serif">URL de Imagen (opcional)</mat-label>
+          <input matInput formControlName="image" placeholder="https://...">
+          <mat-icon matPrefix class="mr-2 text-wood-light">image</mat-icon>
+        </mat-form-field>
+
+        <div class="flex justify-end gap-4 pt-6">
+          <button type="button" mat-button mat-dialog-close class="!rounded-xl h-12 px-6">Cancelar</button>
+          <button type="submit" mat-flat-button class="!rounded-xl h-12 px-10 wood-gradient !text-black font-bold shadow-lg" [disabled]="productForm.invalid">
+            {{ data.product ? 'Guardar Cambios' : 'Crear Producto' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  `,
+  styles: [`
+    :host { display: block; }
+    ::ng-deep .mat-mdc-form-field-subscript-wrapper { display: none; }
+  `]
+})
+export class ProductFormDialog implements OnInit {
+  private fb = inject(FormBuilder);
+  private dialogRef = inject(MatDialogRef<ProductFormDialog>);
+  data = inject<{ product: Product | null, categoryId: string }>(MAT_DIALOG_DATA);
+
+  productForm = this.fb.group({
+    name: ['', Validators.required],
+    description: [''],
+    price: [1.0, [Validators.required, Validators.min(0)]],
+    stock: [100, [Validators.required, Validators.min(0)]],
+    image: ['']
+  });
+
+  ngOnInit() {
+    if (this.data.product) {
+      this.productForm.patchValue({
+        name: this.data.product.name,
+        description: this.data.product.description,
+        price: this.data.product.price,
+        stock: this.data.product.stock,
+        image: this.data.product.image
+      });
+    }
+  }
+
+  onSubmit() {
+    if (this.productForm.valid) {
+      const formValue = this.productForm.value;
+      const productData: Partial<Product> = {
+        ...this.data.product,
+        name: formValue.name!,
+        description: formValue.description!,
+        price: formValue.price!,
+        stock: formValue.stock!,
+        image: formValue.image!,
+        categoryId: this.data.categoryId
+      };
+      this.dialogRef.close(productData);
+    }
+  }
+}
 
 @Component({
   selector: 'app-products-list',
@@ -37,12 +138,12 @@ import { Product, Category } from '../../domain/models';
               <mat-icon class="mr-2">arrow_back</mat-icon>
               <span class="font-bold vintage-serif">Volver a Grupos</span>
             </button>
-            <button mat-flat-button class="!rounded-2xl h-14 px-8 wood-gradient !text-white shadow-lg hover:shadow-xl transition-all active:scale-95" (click)="addProduct()">
+            <button mat-flat-button class="!rounded-2xl h-14 px-8 wood-gradient !text-black shadow-lg hover:shadow-xl transition-all active:scale-95" (click)="addProduct()">
               <mat-icon class="mr-2">add_circle</mat-icon>
               <span class="font-bold text-lg vintage-serif">Nuevo Producto</span>
             </button>
           } @else {
-            <button mat-flat-button class="!rounded-2xl h-14 px-8 wood-gradient !text-white shadow-lg hover:shadow-xl transition-all active:scale-95" (click)="addCategory()">
+            <button mat-flat-button class="!rounded-2xl h-14 px-8 wood-gradient !text-black shadow-lg hover:shadow-xl transition-all active:scale-95" (click)="addCategory()">
               <mat-icon class="mr-2">create_new_folder</mat-icon>
               <span class="font-bold text-lg vintage-serif">Nueva Agrupación</span>
             </button>
@@ -68,7 +169,7 @@ import { Product, Category } from '../../domain/models';
                     <p class="text-white/80 text-sm line-clamp-2 italic">{{ cat.description }}</p>
                   </div>
                   <div class="absolute top-6 right-6 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button mat-mini-fab class="!bg-white/20 !backdrop-blur-md !text-white" (click)="$event.stopPropagation(); editCategory(cat)" title="Editar">
+                    <button mat-mini-fab class="!bg-white/20 !backdrop-blur-md !text-black" (click)="$event.stopPropagation(); editCategory(cat)" title="Editar">
                       <mat-icon>edit</mat-icon>
                     </button>
                     <button mat-mini-fab color="warn" (click)="$event.stopPropagation(); deleteCategory(cat.id)" title="Eliminar">
@@ -111,8 +212,8 @@ import { Product, Category } from '../../domain/models';
                   </div>
                   <div class="absolute top-4 right-4">
                     <span [ngClass]="{
-                      'bg-rose-500 text-white': p.stock < 20,
-                      'bg-emerald-500 text-white': p.stock >= 20
+                      'bg-rose-500 text-black': p.stock < 20,
+                      'bg-emerald-500 text-black': p.stock >= 20
                     }" class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg">
                       {{ p.stock }} uds.
                     </span>
@@ -152,6 +253,7 @@ import { Product, Category } from '../../domain/models';
 export class ProductsList implements OnInit {
   productService = inject(ProductService);
   categoryService = inject(CategoryService);
+  private dialog = inject(MatDialog);
   
   selectedCategoryId = signal<string | null>(null);
   
@@ -205,32 +307,32 @@ export class ProductsList implements OnInit {
     const catId = this.selectedCategoryId();
     if (!catId) return;
 
-    const name = prompt('Nombre del producto:');
-    if (name) {
-      const description = prompt('Descripción del producto:') || '';
-      const price = parseFloat(prompt('Precio:', '1.0') || '1.0');
-      
-      this.productService.add({
-        id: Math.random().toString(36).substr(2, 9),
-        name,
-        price,
-        stock: 100,
-        categoryId: catId,
-        description
-      });
-    }
+    const dialogRef = this.dialog.open(ProductFormDialog, {
+      data: { product: null, categoryId: catId },
+      width: '600px'
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.productService.add({
+          ...result,
+          id: 'prod-' + Math.random().toString(36).substr(2, 5)
+        });
+      }
+    });
   }
 
   editProduct(product: Product) {
-    const newName = prompt('Nuevo nombre:', product.name);
-    const newPrice = prompt('Nuevo precio:', product.price.toString());
-    if (newName && newPrice !== null) {
-      this.productService.update({ 
-        ...product, 
-        name: newName,
-        price: parseFloat(newPrice) 
-      });
-    }
+    const dialogRef = this.dialog.open(ProductFormDialog, {
+      data: { product, categoryId: product.categoryId },
+      width: '600px'
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.productService.update(result);
+      }
+    });
   }
 
   uploadImage(product: Product) {

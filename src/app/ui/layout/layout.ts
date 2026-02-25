@@ -28,7 +28,7 @@ import { UserRole } from '../../domain/models';
       <mat-sidenav #sidenav mode="side" opened class="w-72 border-r border-wood-light/20 bg-vintage-paper shadow-xl">
         <div class="p-8 flex flex-col h-full">
           <div class="flex flex-col items-center mb-10 text-center">
-            <div class="bg-wood-dark p-3 rounded-full text-white shadow-lg mb-4 ring-4 ring-wood-light/20">
+            <div class="bg-wood-light p-3 rounded-full text-amber-50 shadow-lg mb-4 ring-4 ring-wood-light/30 border border-wood-dark/10">
               <mat-icon class="!w-8 !h-8 text-2xl">bakery_dining</mat-icon>
             </div>
             <h1 class="text-2xl font-bold text-wood-dark tracking-tight vintage-serif">Sánchez</h1>
@@ -97,7 +97,7 @@ import { UserRole } from '../../domain/models';
 
           <div class="mt-auto pt-8 border-t border-wood-light/20">
             <div class="flex items-center gap-4 mb-6 px-2 bg-white/40 p-3 rounded-2xl border border-wood-light/10">
-              <div class="w-12 h-12 rounded-full bg-wood-medium flex items-center justify-center text-white font-bold shadow-inner">
+              <div class="w-12 h-12 rounded-full bg-wood-medium flex items-center justify-center text-black font-bold shadow-inner">
                 {{ auth.user()?.name?.charAt(0)?.toUpperCase() }}
               </div>
               <div class="flex flex-col overflow-hidden">
